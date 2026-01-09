@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+    overflow:hidden;
+    background:#000;
+    cursor:pointer
+}
+.scene{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    opacity:0;
+    transition:opacity 1.5s ease;
+    pointer-events:none
+}
+.scene.active{
+    opacity:1;
+    pointer-events:auto
+}
+.scene.fade-out{opacity:0}
+
+#scene1{background:url("Data/Images/bg1.jpg") center/cover no-repeat}
+#scene2{background:url("Data/Images/bg2.jpg") center/cover no-repeat}
+#scene3{background:url("Data/Images/bg3.png") center/cover no-repeat}
+#scene4{background:url("Data/Images/bg4.png") center/cover no-repeat}
+
+.nav-arrow{
+    position:fixed;
+    top:20px;
+    font-size:30px;
+    color:white;
+    background:rgba(0,0,0,.4);
+    padding:10px 15px;
+    border-radius:50%;
+    cursor:pointer;
+    z-index:1000;
+    user-select:none
+}
+.nav-arrow.left{left:20px}
+.nav-arrow.right{right:20px}
+.nav-arrow:hover{background:rgba(0,0,0,.7)}
+
+.welcome-text,.intro-text,.emotion-text,.final-text{
+    color:white;
+    text-align:center;
+    padding:40px
+}
+
+.profile-image{
+    width:180px;height:180px;
+    border-radius:50%;
+    margin-bottom:25px;
+    object-fit:cover
+}
+p {margin-top:15px;font-size:24px;}
+</style>
+</head>
+
+<body>
+
+<div class="nav-arrow left" id="prevBtn">❮</div>
+<div class="nav-arrow right" id="nextBtn">❯</div>
+
+<!-- Scene 1: Welcome -->
+    <div class="scene active" id="scene1">
+        <div class="welcome-text">
+            <h1>Welcome!</h1>
+            <p>Click anywhere to continue...</p>
+        </div>
+    </div>
+
+    <!-- Scene 2: Giới thiệu tên -->
+    <div class="scene" id="scene2">
+        <div class="intro-text">
+            <!-- ĐÂY LÀ NỚI THÊM ẢNH CỦA BẠN -->
+            <img src="Data/Images/avt.jpg" alt="Profile" class="profile-image">
+            <!-- ======================================== -->
+            <h2>Than Trong Tin</h2>
+            <p>/IT 23-26/</p>
+            <p><i>"Forged from code.."</i></p>
+        </div>
+    </div>
+
+    <!-- Scene 3: Cảm xúc -->
+    <div class="scene" id="scene3">
+        <div class="emotion-text">
+            <h2><i>*From Tin*</i></h2>
+            <p><i>"Đến với lớp như một điểm khởi đầu, và rời đi mang theo nó như một điểm kết thúc của tuổi trẻ.."</i></p>
+        </div>
+    </div>
+
+    <!-- Scene 4: Lời cuối -->
+    <div class="scene" id="scene4">
+        <div class="final-text">
+            <h2><i>*To IT 23-26*</i></h2>
+            <p><i>"Có những ngày không ở vị trí tỏa sáng, nhưng vẫn còn vai trò để lấp đầy."</i></p>
+            <p><i>"Tạm biệt, mỗi con đường rồi sẽ tự tìm ra ý nghĩa của mình."</i></p>
+        </div>
+    </div>
+
+<!-- BACKGROUND MUSIC -->
+<audio id="bgMusic" autoplay>
+    <source src="Data/Audios/vlr.mp3" type="audio/mpeg">
+</audio>
+
+<!-- SCENE SOUNDS -->
+<audio id="s1" src="Data/Audios/scene1.mp3"></audio>
+<audio id="s2" src="Data/Audios/scene2.mp3"></audio>
+<audio id="s3" src="Data/Audios/scene3.mp3"></audio>
+<audio id="s4" src="Data/Audios/scene4.mp3"></audio>
+
+<script>
+let currentScene = 1;
+const total = 4;
+let bgStarted = false;
+let transitioning = false;
+
+const bgMusic = document.getElementById("bgMusic");
+bgMusic.volume = 0.7;
+
+const sounds = {
+    1: document.getElementById("s1"),
+    2: document.getElementById("s2"),
+    3: document.getElementById("s3"),
+    4: document.getElementById("s4")
+};
+
+Object.values(sounds).forEach(s => s.volume = 0.6);
+
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function updateArrows(){
+    prevBtn.style.display = currentScene === 1 ? "none" : "block";
+    nextBtn.style.display = currentScene === total ? "none" : "block";
+}
+
+function playSceneSound(i, dir){
+    if(dir !== "next") return;
+    const s = sounds[i];
+    if(!s) return;
+    s.currentTime = 0;
+    s.play().catch(()=>{});
+}
+
+function showScene(next, dir="next"){
+    if(transitioning) return;
+    if(next < 1 || next > total || next === currentScene) return;
+
+    transitioning = true;
+
+    const cur = document.getElementById("scene"+currentScene);
+    cur.classList.remove("active");
+    cur.classList.add("fade-out");
+
+    currentScene = next;
+
+    setTimeout(()=>{
+        const nxt = document.getElementById("scene"+currentScene);
+        nxt.classList.remove("fade-out");
+        nxt.classList.add("active");
+
+        playSceneSound(currentScene, dir);
+        updateArrows();
+        transitioning = false;
+    },150);
+}
+
+/* CLICK ANYWHERE */
+document.body.addEventListener("click", e=>{
+    if(!bgStarted){
+        bgMusic.play().catch(()=>{});
+        bgStarted = true;
+    }
+    if(e.target.closest(".nav-arrow")) return;
+    showScene(currentScene+1,"next");
+});
+
+nextBtn.onclick = e=>{
+    e.stopPropagation();
+    showScene(currentScene+1,"next");
+};
+prevBtn.onclick = e=>{
+    e.stopPropagation();
+    showScene(currentScene-1,"back");
+};
+
+updateArrows();
+</script>
+
+</body>
+</html>
